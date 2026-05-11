@@ -13,4 +13,5 @@ RUN curl -L --output /usr/local/bin/cloudflared https://github.com/cloudflare/cl
 ENV TUNNEL_TOKEN=""
 
 # 增加权限检查和显式日志输出
-CMD ["sh", "-c", "/usr/local/bin/cloudflared --version"]
+# 显式指定路径，并使用 nohup 确保进程互不干扰
+CMD ["sh", "-c", "s-ui run > /dev/null 2>&1 & sleep 3 && /usr/local/bin/cloudflared tunnel --no-autoupdate run --token ${TUNNEL_TOKEN} 2>&1"]
