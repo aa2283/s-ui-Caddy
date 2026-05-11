@@ -1,7 +1,7 @@
 :2095 {
     # 1. 转发节点流量
     handle_path /ws {
-        reverse_proxy 0.0.0.0:32619
+        reverse_proxy S-UI-Caddy:32619
     }
 
     # 2. 既然你发现 /app/ 能打开，我们强制把根目录连过去
@@ -9,7 +9,7 @@
 
     # 3. 转发面板流量（使用 0.0.0.0 绕过 127.0.0.1 的限制）
     handle /app/* {
-        reverse_proxy 0.0.0.0:2053 {
+        reverse_proxy S-UI-Caddy:2053 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
         }
@@ -17,6 +17,6 @@
 
     # 兜底转发
     handle {
-        reverse_proxy 0.0.0.0:2053
+        reverse_proxy S-UI-Caddy:2053
     }
 }
