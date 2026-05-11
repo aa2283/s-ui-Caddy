@@ -1,21 +1,11 @@
 :2095 {
-    # 1. 自动重定向：如果访问根路径 /，自动变形成 /app/
-    # 这样你只需要输入域名，它会自动帮你跳进 s-ui 的大门
-    redir / /app/ 308
-
-    # 2. 核心转发：把所有请求塞给 s-ui
-    # 这里用 0.0.0.0 是为了绕过你之前遇到的 127.0.0.1 不通的问题
-    handle /app/* {
+    # 验证测试：把外部的 /mysui/ 转发给内部 s-ui 的 /app/
+    handle_path /mysui/* {
         reverse_proxy 0.0.0.0:2053
     }
 
-    # 3. 节点流量（优先级其实不分先后，Caddy 会自动匹配）
-    handle_path /ws {
-        reverse_proxy 0.0.0.0:32619
-    }
-
-    # 兜底 handle，防止路径意外导致的 404
+    # 兜底：如果访问其他路径，返回一段话
     handle {
-        reverse_proxy 0.0.0.0:2053
+        respond "Caddy is here, but I won't let you see s-ui yet!" 200
     }
 }
