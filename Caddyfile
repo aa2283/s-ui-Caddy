@@ -1,21 +1,19 @@
 :2095 {
-    # 1. 优先处理节点流量
+    # 1. 节点流量转发 (继续尝试 127.0.0.1，如果不通再改)
     handle_path /ws {
         reverse_proxy 127.0.0.1:32619
     }
 
-    # 2. 无论用户输入 /admin 还是 /app，都直接转发
-    # 不使用 handle_path，避免切掉路径导致 s-ui 识别不了
-    handle /admin/* {
-        reverse_proxy 127.0.0.1:2053
-    }
-
+    # 2. 面板转发：放弃 127.0.0.1，改用 0.0.0.0
+    # 这会强制 Caddy 寻找容器内所有接口上的 2053 端口
     handle /app/* {
-        reverse_proxy 127.0.0.1:2053
+        reverse_proxy 0.0.0.0:2053
     }
 
-    # 3. 兜底转发：如果直接访问域名根目录，也转给面板
+    # 3. 兜底：如果根目录打不开，强制跳转到 /app/
+    redir / /app/ 308
+
     handle {
-        reverse_proxy 127.0.0.1:2053
+        reverse_proxy 0.0.0.0:2053
     }
 }
