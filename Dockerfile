@@ -12,6 +12,8 @@ RUN curl -L --output /usr/local/bin/cloudflared https://github.com/cloudflare/cl
 # 3. 这里的变量名必须与 Northflank 后台填的一致
 ENV TUNNEL_TOKEN=""
 
+RUN ls -lh /usr/local/bin/cloudflared || echo "File not found"
+
 # 增加权限检查和显式日志输出
 # 显式指定路径，并使用 nohup 确保进程互不干扰
 CMD ["sh", "-c", "s-ui run > /dev/null 2>&1 & sleep 3 && /usr/local/bin/cloudflared tunnel --no-autoupdate run --token ${TUNNEL_TOKEN} 2>&1"]
