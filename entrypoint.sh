@@ -1,17 +1,21 @@
 #!/bin/sh
 
-# 1. 极其简单的启动方式：直接把 token 喂给 run 指令
-# 删掉所有多余的 --no-autoupdate 等参数，只留核心
+# 1. 启动隧道（并在后台稳住）
 echo "Starting Cloudflare Tunnel..."
-/usr/local/bin/cloudflared tunnel run --token "${TUNNEL_TOKEN}" &
+/usr/local/bin/cloudflared tunnel run --token "${TUNNEL_TOKEN}" > /dev/stdout 2>&1 &
 
-# 2. 解决 s-ui 找不到的“死计”
-# 既然我们怎么都找不到 s-ui 的位置，我们用一种暴力但有效的办法
-echo "Attempting to start s-ui..."
-# 尝试运行原镜像原本打算运行的那个脚本
-if [ -f "/usr/local/s-ui/s-ui" ]; then
-    exec /usr/local/s-ui/s-ui run
-else
-    # 最后的挣扎：如果找不到，就尝试直接喊名字
-    exec s-ui run
-fi
+# 2. 这里的改动极其重要：即使下面的命令报错，脚本也不会退出
+set +e 
+
+echo "Attempting to locate s-ui binary..."
+# 打印一下当前的路径和文件，帮我们“排雷”
+ls -F /usr/local/bin/
+ls -F /usr/bin/
+
+# 3. 尝试所有可能的真名（有些镜像里叫 s-ui-linux-amd64 之类的）
+echo "Starting Panel..."
+s-ui run || /usr/local/bin/s-ui run || /usr/bin/s-ui run || ./s-ui run
+
+# 4. 关键：为了不让容器重启，我们加一个死循环，让隧道在后台一直跑
+echo "Panel failed to start, but keeping the container alive for the tunnel..."
+tail -f /dev/null
