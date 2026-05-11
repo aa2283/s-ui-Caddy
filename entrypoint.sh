@@ -1,20 +1,17 @@
 #!/bin/sh
 
-# 1. 启动隧道（既然通了，就保持原样）
-echo "Starting Cloudflare Tunnel..."
+# 1. 启动隧道
 /usr/local/bin/cloudflared tunnel run --token "${TUNNEL_TOKEN}" &
 
-# 2. 这里的逻辑很关键：全盘搜索 s-ui 到底在哪里
-echo "Searching for s-ui binary..."
-SUI_BIN=$(find / -name "s-ui" -type f -executable | grep -v "entrypoint.sh" | head -n 1)
+echo "--- 正在尝试启动面板 ---"
+# alireza7/s-ui 镜像的二进制文件通常在 /usr/local/s-ui/s-ui
+# 我们先跳到那个目录，再启动
+cd /usr/local/s-ui && ./s-ui run &
 
-if [ -n "$SUI_BIN" ]; then
-    echo "Found s-ui at: $SUI_BIN"
-    # 3. 使用绝对路径启动面板
-    echo "Starting panel..."
-    exec "$SUI_BIN" run
-else
-    echo "CRITICAL ERROR: Could not find s-ui anywhere!"
-    # 找不到也不要关机，保住隧道
-    tail -f /dev/null
-fi
+# 2. 检查 2095 端口是否真的开了
+sleep 5
+echo "检查本地端口监听状态:"
+netstat -tuln | grep 2095
+
+# 3. 只要端口没开，就保住容器不崩溃，方便我们调试
+tail -f /dev/null
