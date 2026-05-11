@@ -1,21 +1,19 @@
-# 修正后的正确镜像名
 FROM alireza7/s-ui:latest
 
 USER root
 
-# 1. 安装 Caddy (Alpine 环境)
+# 1. 安装 Caddy
 RUN apk add --no-cache caddy
 
-# 2. 复制你的 Caddyfile
+# 2. 复制配置文件
 COPY Caddyfile /etc/caddy/Caddyfile
 
-# 3. 告知平台端口
+# 3. 这里的关键：直接给可能存在的二进制文件加权限
+# 如果在 /app 下找不到，就去全局路径找
+RUN chmod +x /app/s-ui || chmod +x /usr/local/bin/s-ui || true
+
 EXPOSE 2095
 
-# 在 COPY 之后，CMD 之前加入这一行
-RUN chmod +x /app/s-ui
-
-# 4. 启动逻辑：
-# 先以后台模式启动 s-ui
-# 再以前台模式启动 Caddy（这样容器会一直保持运行）
-CMD ["sh", "-c", "/app/s-ui & sleep 10 && caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"]
+# 4. 启动逻辑：使用更通用的命令启动
+# 很多时候直接执行 s-ui 即可，不需要加 /app/ 路径
+CMD ["sh", "-c", "s-ui run & sleep 5 && caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"]
