@@ -1,22 +1,27 @@
 :2095 {
-    # 1. 转发节点流量
+    # 1. 节点流量
     handle_path /ws {
-        reverse_proxy S-UI-Caddy:32619
+        reverse_proxy 0.0.0.0:32619
     }
 
-    # 2. 既然你发现 /app/ 能打开，我们强制把根目录连过去
-    redir / /app/ 308
-
-    # 3. 转发面板流量（使用 0.0.0.0 绕过 127.0.0.1 的限制）
-    handle /app/* {
-        reverse_proxy S-UI-Caddy:2053 {
-            header_up Host {host}
-            header_up X-Real-IP {remote_host}
-        }
+    # 2. 暴力尝试所有可能的面板端口
+    # 访问 域名/2053 试一下
+    handle_path /2053/* {
+        reverse_proxy 0.0.0.0:2053
     }
 
-    # 兜底转发
+    # 访问 域名/2086 试一下
+    handle_path /2086/* {
+        reverse_proxy 0.0.0.0:2086
+    }
+
+    # 访问 域名/2096 试一下
+    handle_path /2096/* {
+        reverse_proxy 0.0.0.0:2096
+    }
+
+    # 3. 如果都不行，显示当前环境信息
     handle {
-        reverse_proxy S-UI-Caddy:2053
+        respond "Caddy is LIVE. Try adding /2053/ or /2086/ to URL." 200
     }
 }
