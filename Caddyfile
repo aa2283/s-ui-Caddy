@@ -1,16 +1,21 @@
 :2095 {
-    # 1. 转发给面板本身 (s-ui 默认可能就在 2095，为了不冲突，建议在面板里把面板端口改到 2096)
-    # 如果你把面板改到了 2096：
-    handle_path /admin/* {
-        reverse_proxy 127.0.0.1:2086
-    }
-
-    # 2. 转发给节点流量 (WebSocket 路径设为 /ws)
+    # 1. 优先处理节点流量
     handle_path /ws {
         reverse_proxy 127.0.0.1:32619
     }
 
+    # 2. 无论用户输入 /admin 还是 /app，都直接转发
+    # 不使用 handle_path，避免切掉路径导致 s-ui 识别不了
+    handle /admin/* {
+        reverse_proxy 127.0.0.1:2053
+    }
+
+    handle /app/* {
+        reverse_proxy 127.0.0.1:2053
+    }
+
+    # 3. 兜底转发：如果直接访问域名根目录，也转给面板
     handle {
-        respond "Server is running" 200
+        reverse_proxy 127.0.0.1:2053
     }
 }
