@@ -1,18 +1,22 @@
 #!/bin/sh
 
-# 1. 启动隧道（保持原样，它已经很完美了）
+# 1. 启动隧道 (已确认正常)
 /usr/local/bin/cloudflared tunnel run --token "${TUNNEL_TOKEN}" &
 
-echo "--- 发现程序真名：/app/sui ---"
+echo "--- 正在尝试启动 sui 面板 ---"
 
-# 2. 使用刚才搜索到的确切路径启动
-# 注意：alireza7 的版本通常需要 run 参数
-/app/sui run &
+# 2. 这里的改动至关重要：
+# 很多版本不需要加 "run"，直接运行即可。
+# 如果直接运行还退出，尝试执行后台运行。
+/app/sui > /dev/stdout 2>&1 &
 
-# 3. 给它几秒钟启动时间，然后检查端口
+# 3. 这里的 32619 还是错的！
+# 你的日志显示隧道依然在尝试转发到 32619。
+# 请务必去 Cloudflare 官网把 Service 改成 http://localhost:2095
+
+# 4. 检查是否真的跑起来了
 sleep 5
-echo "检查 2095 端口是否已开启:"
-netstat -tuln | grep 2095
+echo "当前监听端口状态 (必须看到 2095 才行):"
+netstat -tuln
 
-# 4. 防止脚本退出
 tail -f /dev/null
