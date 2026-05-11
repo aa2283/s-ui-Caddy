@@ -1,4 +1,4 @@
-:2095 {
+#:2095 {
     # 验证测试：把外部的 /mysui/ 转发给内部 s-ui 的 /app/
     handle_path /mysui/* {
         reverse_proxy 0.0.0.0:2053
