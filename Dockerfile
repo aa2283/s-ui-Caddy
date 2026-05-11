@@ -1,15 +1,18 @@
-FROM alireza0/s-ui:latest
+# 修正后的正确镜像名
+FROM alireza7/s-ui:latest
 
 USER root
 
-# 安装 Caddy
+# 1. 安装 Caddy (Alpine 环境)
 RUN apk add --no-cache caddy
 
-# 复制配置文件
+# 2. 复制你的 Caddyfile
 COPY Caddyfile /etc/caddy/Caddyfile
 
-# 暴露端口 (Northflank 需要知道哪个端口对外)
+# 3. 告知平台端口
 EXPOSE 2095
 
-# 修正后的启动命令：先启动 caddy 放在后台，再启动 s-ui 放在前台
-CMD ["sh", "-c", "caddy run --config /etc/caddy/Caddyfile --adapter caddyfile & /app/s-ui"]
+# 4. 启动逻辑：
+# 先以后台模式启动 s-ui
+# 再以前台模式启动 Caddy（这样容器会一直保持运行）
+CMD ["sh", "-c", "/app/s-ui & caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"]
