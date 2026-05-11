@@ -1,25 +1,17 @@
 #!/bin/sh
 
-echo "--- Diagnostic Start ---"
-echo "Current Token length: ${#TUNNEL_TOKEN}"
-echo "Searching for s-ui binary..."
-# 暴力搜索所有可能的二进制文件
-ACTUAL_SUI=$(find / -name "*s-ui*" -type f -executable | head -n 1)
-echo "Found potential binary at: $ACTUAL_SUI"
-echo "--- Diagnostic End ---"
-
-# 1. 启动隧道 (改变参数顺序，确保变量被读取)
+# 1. 极其简单的启动方式：直接把 token 喂给 run 指令
+# 删掉所有多余的 --no-autoupdate 等参数，只留核心
 echo "Starting Cloudflare Tunnel..."
-/usr/local/bin/cloudflared tunnel run --token "${TUNNEL_TOKEN}" --no-autoupdate > /dev/stdout 2>&1 &
+/usr/local/bin/cloudflared tunnel run --token "${TUNNEL_TOKEN}" &
 
-# 2. 等待隧道握手
-sleep 5
-
-# 3. 运行面板
-if [ -n "$ACTUAL_SUI" ]; then
-    echo "Starting panel from $ACTUAL_SUI"
-    exec "$ACTUAL_SUI" run
+# 2. 解决 s-ui 找不到的“死计”
+# 既然我们怎么都找不到 s-ui 的位置，我们用一种暴力但有效的办法
+echo "Attempting to start s-ui..."
+# 尝试运行原镜像原本打算运行的那个脚本
+if [ -f "/usr/local/s-ui/s-ui" ]; then
+    exec /usr/local/s-ui/s-ui run
 else
-    echo "Using fallback command..."
+    # 最后的挣扎：如果找不到，就尝试直接喊名字
     exec s-ui run
 fi
