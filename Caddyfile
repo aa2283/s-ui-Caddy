@@ -1,27 +1,21 @@
 :2095 {
-    # 1. 节点流量
+    # 1. 自动重定向：如果访问根路径 /，自动变形成 /app/
+    # 这样你只需要输入域名，它会自动帮你跳进 s-ui 的大门
+    redir / /app/ 308
+
+    # 2. 核心转发：把所有请求塞给 s-ui
+    # 这里用 0.0.0.0 是为了绕过你之前遇到的 127.0.0.1 不通的问题
+    handle /app/* {
+        reverse_proxy 0.0.0.0:2053
+    }
+
+    # 3. 节点流量（优先级其实不分先后，Caddy 会自动匹配）
     handle_path /ws {
         reverse_proxy 0.0.0.0:32619
     }
 
-    # 2. 暴力尝试所有可能的面板端口
-    # 访问 域名/2053 试一下
-    handle_path /2053/* {
-        reverse_proxy 0.0.0.0:2053
-    }
-
-    # 访问 域名/2086 试一下
-    handle_path /2086/* {
-        reverse_proxy 0.0.0.0:2086
-    }
-
-    # 访问 域名/2096 试一下
-    handle_path /2096/* {
-        reverse_proxy 0.0.0.0:2096
-    }
-
-    # 3. 如果都不行，显示当前环境信息
+    # 兜底 handle，防止路径意外导致的 404
     handle {
-        respond "Caddy is LIVE. Try adding /2053/ or /2086/ to URL." 200
+        reverse_proxy 0.0.0.0:2053
     }
 }
