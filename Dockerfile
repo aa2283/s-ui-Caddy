@@ -1,15 +1,17 @@
 FROM alireza7/s-ui:latest
+
 USER root
 
-# 安装 cloudflared (基于 Debian 的安装方式)
-RUN apt-get update && apt-get install -y curl
-RUN curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && \
-    dpkg -i cloudflared.deb && \
-    rm cloudflared.deb
+# 1. 使用 apk 安装 curl 和 libc 兼容库 (cloudflared 需要)
+RUN apk add --no-cache curl libc6-compat
 
-# 环境变量：方便你在 Northflank 界面随时更换 Token
+# 2. 下载适合 Alpine (Linux 64-bit) 的 cloudflared 二进制文件
+RUN curl -L --output /usr/local/bin/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 && \
+    chmod +x /usr/local/bin/cloudflared
+
+# 3. 设置变量 (记得在 Northflank 的 Environment Variables 里填入你的 TOKEN)
 ENV TUNNEL_TOKEN=""
 
-# 启动 s-ui 和隧道
-# 假设你的 s-ui 此时监听在 2095
-CMD ["sh", "-c", "s-ui run & cloudflared tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}"]
+# 4. 启动 s-ui 和隧道
+# s-ui 默认监听 2095，这里假设你的隧道配置指向 http://localhost:2095
+CMD ["sh", "-c", "s-ui run & sleep 2 && cloudflared tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}"]
