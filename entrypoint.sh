@@ -1,5 +1,9 @@
 #!/bin/sh
-set -e
+
+# 1. 启动隧道 (已确认正常)
+/usr/local/bin/cloudflared tunnel run --token "${TUNNEL_TOKEN}" &
+
+echo "--- 正在尝试启动 sui 面板 ---"
 
 # 创建数据库目录
 mkdir -p /usr/local/s-ui/db
@@ -16,8 +20,3 @@ fi
 
 echo "=== [1/2] 正在后台启动 s-ui 面板 (端口: 2095, 路径: /app/) ==="
 ./sui &
-
-
-# 1. 启动隧道 (已确认正常)
-/usr/local/bin/cloudflared tunnel run --token "${TUNNEL_TOKEN}" &
-
